@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.next/
+dist/
+coverage/
+.DS_Store
+
+# Ignore all markdown files except README.md per user directive
+*.md
+**/*.md
+!README.md

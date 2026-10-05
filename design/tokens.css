@@ -1,0 +1,59 @@
+/* Proof / Editorial Utility — design tokens. Components MUST NOT hardcode values outside this file. */
+:root {
+  /* Color — base */
+  --color-paper: #F4F1EA;
+  --color-ink: #111111;
+  --color-warm-gray: #D8D3C9;
+  /* Color — accents (editorial ink; target ratio 85 neutral / 10 cobalt / 3 vermilion / 2 marigold) */
+  --color-cobalt: #1746D1;      /* primary: links, CTAs, key blocks */
+  --color-vermilion: #E54832;   /* metadata markers, alerts; large text/markers only on paper (verify contrast) */
+  --color-marigold: #E9B949;    /* fill/marker ONLY; never text on paper */
+  --color-forest: #1D6B4F;      /* success / issuer-verified */
+  /* Semantic */
+  --color-bg: var(--color-paper);
+  --color-fg: var(--color-ink);
+  --color-rule: var(--color-ink);
+  --color-rule-soft: var(--color-warm-gray);
+  --color-action: var(--color-cobalt);
+  --color-danger: var(--color-vermilion);
+  --color-success: var(--color-forest);
+  --color-focus: var(--color-cobalt);
+
+  /* Type */
+  --font-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-base: 1rem; --text-lg: 1.25rem;
+  --text-xl: 1.75rem; --text-2xl: 2.5rem; --text-3xl: clamp(2.5rem, 6vw, 5rem); --text-hero: clamp(3.5rem, 11vw, 9rem);
+  --leading-tight: 0.95; --leading-snug: 1.15; --leading-body: 1.55;
+  --tracking-mono: 0.06em;
+
+  /* Spacing (4px base) */
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.5rem;
+  --space-6: 2rem; --space-7: 2.5rem; --space-8: 3rem; --space-9: 4rem; --space-10: 6rem; --space-11: 8rem; --space-12: 12rem;
+
+  /* Grid */
+  --grid-columns: 12; --grid-gutter: var(--space-5); --grid-max: 1440px; --grid-margin: clamp(1rem, 4vw, 3rem);
+
+  /* Borders / radii / shadows — sharp by default */
+  --border-thin: 1px solid var(--color-rule);
+  --border-thick: 2px solid var(--color-rule);
+  --radius-0: 0; --radius-1: 2px;           /* no radius above 2px without an ADR */
+  --shadow-none: none;                       /* shadows are exceptional; hard offset only: 4px 4px 0 var(--color-ink) */
+  --shadow-hard: 4px 4px 0 var(--color-ink);
+
+  /* Motion */
+  --motion-fast: 120ms; --motion-normal: 240ms; --motion-slow: 480ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --translate-hover: 4px;
+
+  /* Z-index */
+  --z-base: 0; --z-sticky: 10; --z-overlay: 100; --z-modal: 200; --z-toast: 300;
+
+  /* Breakpoints (reference values; use in media queries) */
+  --bp-sm: 480px; --bp-md: 768px; --bp-lg: 1024px; --bp-xl: 1280px;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-fast: 0ms; --motion-normal: 0ms; --motion-slow: 0ms; --translate-hover: 0px; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+}
