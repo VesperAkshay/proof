@@ -9,6 +9,10 @@ vi.mock("@/services/proof", () => ({
   getPublicProof: vi.fn(),
 }));
 
+vi.mock("@/services/analytics", () => ({
+  recordAnalyticsEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("next/navigation", () => ({
   notFound: vi.fn(),
   permanentRedirect: vi.fn(),
@@ -276,4 +280,61 @@ describe("Public Proof Page Route (M7)", () => {
       expect(screen.getByText("<b>AWS-INJECT</b>")).toBeInTheDocument();
     });
   });
+
+  describe("QR Code & Sharing Integration (M9)", () => {
+    it("renders QR Code links in header, print banner, and footer", async () => {
+      vi.mocked(proofService.getPublicProof).mockResolvedValue({
+        isRedirect: false,
+        user: baseUser,
+        proof: baseProof,
+        primaryAsset: baseAsset,
+        assets: [baseAsset],
+      });
+
+      const page = await ProofPage({
+        params: Promise.resolve({ handle: "akshay", slug: "aws-solutions-architect" }),
+      });
+
+      const { container } = render(page);
+
+      const qrHeaderLink = screen.getByRole("link", { name: /QR CODE/i });
+      expect(qrHeaderLink).toHaveAttribute(
+        "href",
+        "/@akshay/aws-solutions-architect/qr.svg"
+      );
+
+      const printImg = container.querySelector("img[alt='Verification QR code']");
+      expect(printImg).not.toBeNull();
+      expect(printImg).toHaveAttribute(
+        "src",
+        "/@akshay/aws-solutions-architect/qr.svg"
+      );
+
+      expect(screen.getByRole("link", { name: "QR (SVG)" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "QR (PNG)" })).toBeInTheDocument();
+    });
+
+    it("triggers qr_scan analytics event when visited with ?ref=qr", async () => {
+      const analyticsModule = await import("@/services/analytics");
+      vi.mocked(proofService.getPublicProof).mockResolvedValue({
+        isRedirect: false,
+        user: baseUser,
+        proof: baseProof,
+        primaryAsset: baseAsset,
+        assets: [baseAsset],
+      });
+
+      await ProofPage({
+        params: Promise.resolve({ handle: "akshay", slug: "aws-solutions-architect" }),
+        searchParams: Promise.resolve({ ref: "qr" }),
+      });
+
+      expect(analyticsModule.recordAnalyticsEvent).toHaveBeenCalledWith({
+        eventType: "qr_scan",
+        profileUserId: "user-1",
+        proofId: "proof-1",
+      });
+    });
+  });
 });
+

@@ -21,5 +21,6 @@
 - **M5:** File system (R2 direct upload, presigned/multipart, quarantine, magic bytes, scanning) [COMPLETED]
 - **M6:** Document processing & thumbnail generation [COMPLETED]
 - **M7:** Public proof page (`/@username/slug`, SSR, document viewer, download, print-friendly) [COMPLETED]
-- **M8 – M9:** Verification architecture & QR sharing
-- **M10 – M18:** Editor, analytics, SEO, abuse/takedown, performance, security audit, and launch
+- **M8:** Verification architecture (issuers, records, revocation, append-only audit trail) [COMPLETED]
+- **M9:** QR & sharing (canonical SVG/PNG QR, ref=qr analytics tracking) [COMPLETED]
+- **M10 – M18:** Editor, analytics dashboard, SEO, abuse/takedown, performance, security audit, and launch

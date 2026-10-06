@@ -12,11 +12,15 @@ import {
   SectionNumber,
   StatusBadge,
 } from "@/components/ui";
+import { recordAnalyticsEvent } from "@/services/analytics";
 
 interface ProofPageProps {
   params: Promise<{
     handle: string;
     slug: string;
+  }>;
+  searchParams?: Promise<{
+    ref?: string;
   }>;
 }
 
@@ -79,7 +83,7 @@ function formatMetaDate(date: Date | null): string | null {
   return d.toLocaleDateString("en-US", { month: "short", year: "numeric" }).toUpperCase();
 }
 
-export default async function ProofPage({ params }: ProofPageProps) {
+export default async function ProofPage({ params, searchParams }: ProofPageProps) {
   const { handle, slug } = await params;
   const result = await getPublicProof(handle, slug);
 
@@ -94,6 +98,19 @@ export default async function ProofPage({ params }: ProofPageProps) {
   }
 
   const { proof, user, primaryAsset } = result;
+
+  // Track QR scan event if ?ref=qr is present
+  if (searchParams) {
+    const sp = await searchParams;
+    if (sp.ref === "qr") {
+      recordAnalyticsEvent({
+        eventType: "qr_scan",
+        profileUserId: user.id,
+        proofId: proof.id,
+      }).catch(() => {});
+    }
+  }
+
   const canonicalUrl = `${BASE_URL}/@${user.username}/${proof.slug}`;
   const safeCredentialUrl = sanitizeHttpsUrl(proof.credentialUrl);
 
@@ -172,19 +189,40 @@ export default async function ProofPage({ params }: ProofPageProps) {
               </div>
             </Link>
 
-            <Link
-              href="/"
-              className="font-mono text-xs uppercase tracking-mono font-bold text-ink hover:text-cobalt transition-colors"
-            >
-              PROOF.SO
-            </Link>
+            <div className="flex items-center gap-4">
+              <a
+                href={`/@${user.username}/${proof.slug}/qr.svg`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-mono font-semibold px-2.5 py-1 border border-rule hover:bg-ink hover:text-paper transition-colors"
+                title="View QR Code"
+              >
+                <span>QR CODE</span>
+                <span aria-hidden="true">☵</span>
+              </a>
+              <Link
+                href="/"
+                className="font-mono text-xs uppercase tracking-mono font-bold text-ink hover:text-cobalt transition-colors"
+              >
+                PROOF.SO
+              </Link>
+            </div>
           </header>
 
           {/* Print-only Header Banner */}
           <div className="hidden print-only mb-6 pb-4 border-b-2 border-ink">
-            <div className="flex justify-between items-baseline font-mono text-xs uppercase">
-              <span className="font-bold">PROOF PERMANENT ARCHIVE</span>
-              <span>{canonicalUrl}</span>
+            <div className="flex justify-between items-center font-mono text-xs uppercase">
+              <div className="space-y-1">
+                <p className="font-bold">PROOF PERMANENT ARCHIVE</p>
+                <p>{canonicalUrl}</p>
+                <p className="text-[10px] text-ink/70">VERIFICATION STATUS: {proof.effectiveStatus}</p>
+              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/@${user.username}/${proof.slug}/qr.svg`}
+                alt="Verification QR code"
+                className="w-16 h-16 border border-ink"
+              />
             </div>
           </div>
 
@@ -321,7 +359,25 @@ export default async function ProofPage({ params }: ProofPageProps) {
               PROOF.SO
             </Link>
           </div>
-          <div className="text-center sm:text-right">
+          <div className="flex items-center gap-3 text-center sm:text-right">
+            <a
+              href={`/@${user.username}/${proof.slug}/qr.svg`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline text-cobalt"
+            >
+              QR (SVG)
+            </a>
+            <span>/</span>
+            <a
+              href={`/@${user.username}/${proof.slug}/qr.png`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline text-cobalt"
+            >
+              QR (PNG)
+            </a>
+            <span>•</span>
             <span>PERMANENT EVIDENCE LAYER</span>
           </div>
         </footer>
