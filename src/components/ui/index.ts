@@ -7,3 +7,5 @@ export * from "./Skeleton";
 export * from "./StatusBadge";
 export * from "./EmptyState";
 export * from "./HandleInput";
+export * from "./IndexList";
+export * from "./Avatar";
