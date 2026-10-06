@@ -19,6 +19,6 @@
 - **M3:** Profile system (`/@username` public display, bio, selected proofs, SEO, 301 redirects) [COMPLETED]
 - **M4:** Proof creation & lifecycle state machine [COMPLETED]
 - **M5:** File system (R2 direct upload, presigned/multipart, quarantine, magic bytes, scanning) [COMPLETED]
-- **M6:** Document processing & thumbnail generation
+- **M6:** Document processing & thumbnail generation [COMPLETED]
 - **M7 – M9:** Public proof page (`/@username/slug`), verification architecture, and QR sharing
 - **M10 – M18:** Editor, analytics, SEO, abuse/takedown, performance, security audit, and launch
