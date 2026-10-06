@@ -250,6 +250,9 @@ export async function getAuthorizedDownloadUrl(
     );
   }
 
+  if (storage.createPresignedDownloadUrl) {
+    return await storage.createPresignedDownloadUrl(asset.objectKey, asset.originalFilename, 300);
+  }
   return await storage.createPresignedUploadUrl(asset.objectKey, asset.mimeType, 300);
 }
 

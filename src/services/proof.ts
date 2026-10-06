@@ -1,7 +1,8 @@
 import { eq, and, asc, desc, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { proofs, proofSlugHistory, issuers, type Proof } from "@/db/schema";
+import { proofs, proofSlugHistory, issuers, users, handleHistory, assets, proofAssets, type Proof } from "@/db/schema";
 import { normalizeSlug, validateSlug, generateSlugSuggestions } from "@/lib/slug";
+import { normalizeHandle } from "@/lib/handle";
 import { isValidLifecycleTransition, type LifecycleState } from "@/db/transitions";
 import { getEffectiveVerificationStatus } from "@/services/profile";
 import type {
@@ -438,4 +439,234 @@ export async function reorderProofs(
         .where(and(eq(proofs.id, id), eq(proofs.userId, userId)));
     }
   });
+}
+
+export interface PublicProofAssetDTO {
+  id: string;
+  role: string;
+  originalFilename: string;
+  mimeType: string;
+  sizeBytes: number;
+  previewUrl: string | null;
+  downloadUrl: string;
+}
+
+export interface PublicProofUserDTO {
+  id: string;
+  username: string;
+  displayName: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+}
+
+export interface PublicProofDetailDTO {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  proofType: string;
+  issuerDisplayName: string | null;
+  issuedAt: Date | null;
+  expiresAt: Date | null;
+  credentialId: string | null;
+  credentialUrl: string | null;
+  lifecycleState: string;
+  visibility: string;
+  verificationStatus: string;
+  effectiveStatus: VerificationState;
+  publishedAt: Date | null;
+}
+
+export type PublicProofResult =
+  | {
+      isRedirect: true;
+      redirectTo: string;
+    }
+  | {
+      isRedirect: false;
+      user: PublicProofUserDTO;
+      proof: PublicProofDetailDTO;
+      primaryAsset: PublicProofAssetDTO | null;
+      assets: PublicProofAssetDTO[];
+    };
+
+/**
+ * Fetches the public proof details, associated ready assets, and owner info.
+ * Enforces public visibility rules:
+ * - Returns redirect descriptor on historical handle or slug change.
+ * - Returns null (404) if user is inactive, proof is non-public, or proof is missing.
+ */
+export async function getPublicProof(
+  handle: string,
+  slug: string
+): Promise<PublicProofResult | null> {
+  const normalizedHandle = normalizeHandle(handle);
+
+  // 1. Resolve user by usernameNormalized
+  const [user] = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      displayName: users.displayName,
+      bio: users.bio,
+      avatarAssetId: users.avatarAssetId,
+      status: users.status,
+    })
+    .from(users)
+    .where(eq(users.usernameNormalized, normalizedHandle))
+    .limit(1);
+
+  if (!user) {
+    // Check handleHistory for 301 handle redirect
+    const [historyEntry] = await db
+      .select({
+        currentUsername: users.username,
+        userStatus: users.status,
+      })
+      .from(handleHistory)
+      .innerJoin(users, eq(handleHistory.userId, users.id))
+      .where(eq(handleHistory.handleNormalized, normalizedHandle))
+      .limit(1);
+
+    if (historyEntry && historyEntry.userStatus === "active") {
+      return {
+        isRedirect: true,
+        redirectTo: `/@${historyEntry.currentUsername}/${slug}`,
+      };
+    }
+
+    return null;
+  }
+
+  // Suspended or deleted users are never publicly visible (404 + noindex)
+  if (user.status !== "active") {
+    return null;
+  }
+
+  // 2. Resolve proof by (userId, slug)
+  const [proofRow] = await db
+    .select({
+      proof: proofs,
+      issuerName: issuers.name,
+    })
+    .from(proofs)
+    .leftJoin(issuers, eq(proofs.issuerId, issuers.id))
+    .where(and(eq(proofs.userId, user.id), eq(proofs.slug, slug)))
+    .limit(1);
+
+  if (!proofRow) {
+    // Check proofSlugHistory for 301 slug redirect
+    const [slugHistoryEntry] = await db
+      .select({
+        currentSlug: proofs.slug,
+        lifecycleState: proofs.lifecycleState,
+        visibility: proofs.visibility,
+      })
+      .from(proofSlugHistory)
+      .innerJoin(proofs, eq(proofSlugHistory.proofId, proofs.id))
+      .where(
+        and(
+          eq(proofSlugHistory.userId, user.id),
+          eq(proofSlugHistory.slug, slug)
+        )
+      )
+      .limit(1);
+
+    if (
+      slugHistoryEntry &&
+      slugHistoryEntry.lifecycleState === "PUBLISHED" &&
+      (slugHistoryEntry.visibility === "public" || slugHistoryEntry.visibility === "unlisted")
+    ) {
+      return {
+        isRedirect: true,
+        redirectTo: `/@${user.username}/${slugHistoryEntry.currentSlug}`,
+      };
+    }
+
+    return null;
+  }
+
+  const { proof, issuerName } = proofRow;
+
+  // 3. Verification of public accessibility
+  if (
+    proof.lifecycleState !== "PUBLISHED" ||
+    (proof.visibility !== "public" && proof.visibility !== "unlisted")
+  ) {
+    return null;
+  }
+
+  // 4. Resolve attached READY assets
+  const attachedAssets = await db
+    .select({
+      proofAsset: proofAssets,
+      asset: assets,
+    })
+    .from(proofAssets)
+    .innerJoin(assets, eq(proofAssets.assetId, assets.id))
+    .where(
+      and(
+        eq(proofAssets.proofId, proof.id),
+        eq(assets.status, "READY"),
+        eq(assets.ownerId, user.id)
+      )
+    )
+    .orderBy(asc(proofAssets.sortOrder));
+
+  const effectiveStatus = getEffectiveVerificationStatus(
+    proof.verificationStatus,
+    proof.expiresAt
+  );
+
+  const mappedAssets: PublicProofAssetDTO[] = attachedAssets.map(({ proofAsset, asset }) => {
+    return {
+      id: asset.id,
+      role: proofAsset.role,
+      originalFilename: asset.originalFilename,
+      mimeType: asset.mimeType,
+      sizeBytes: asset.sizeBytes,
+      previewUrl: `/api/assets/${asset.id}/preview`,
+      downloadUrl: `/@${user.username}/${proof.slug}/download`,
+    };
+  });
+
+  const primaryAsset =
+    mappedAssets.find((a) => a.role === "evidence" || a.role === "cover") ||
+    mappedAssets[0] ||
+    null;
+
+  let avatarUrl: string | null = null;
+  if (user.avatarAssetId) {
+    avatarUrl = `/api/assets/${user.avatarAssetId}/preview`;
+  }
+
+  return {
+    isRedirect: false,
+    user: {
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      bio: user.bio,
+      avatarUrl,
+    },
+    proof: {
+      id: proof.id,
+      slug: proof.slug,
+      title: proof.title,
+      description: proof.description,
+      proofType: proof.proofType,
+      issuerDisplayName: issuerName || proof.issuerNameText,
+      issuedAt: proof.issuedAt,
+      expiresAt: proof.expiresAt,
+      credentialId: proof.credentialId,
+      credentialUrl: proof.credentialUrl,
+      lifecycleState: proof.lifecycleState,
+      visibility: proof.visibility,
+      verificationStatus: proof.verificationStatus,
+      effectiveStatus,
+      publishedAt: proof.publishedAt,
+    },
+    primaryAsset,
+    assets: mappedAssets,
+  };
 }

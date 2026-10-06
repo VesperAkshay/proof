@@ -29,6 +29,7 @@ export interface StorageService {
   getObjectBytes(key: string): Promise<Buffer>;
   deleteObject(key: string): Promise<void>;
   copyObject(sourceKey: string, destinationKey: string): Promise<void>;
+  createPresignedDownloadUrl?(key: string, filename?: string, expiresInSeconds?: number): Promise<string>;
 }
 
 export class R2StorageService implements StorageService {
@@ -162,6 +163,21 @@ export class R2StorageService implements StorageService {
     });
     await this.client.send(command);
   }
+
+  async createPresignedDownloadUrl(
+    key: string,
+    filename?: string,
+    expiresInSeconds = 300
+  ): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      ResponseContentDisposition: filename
+        ? `attachment; filename="${encodeURIComponent(filename)}"`
+        : "attachment",
+    });
+    return await getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });
+  }
 }
 
 /**
@@ -232,6 +248,10 @@ export class InMemoryStorageService implements StorageService {
   // Test helper
   putObjectDirect(key: string, buffer: Buffer): void {
     this.store.set(key, buffer);
+  }
+
+  async createPresignedDownloadUrl(key: string, filename?: string): Promise<string> {
+    return `https://storage.test/download?key=${encodeURIComponent(key)}&filename=${encodeURIComponent(filename || "")}`;
   }
 }
 
