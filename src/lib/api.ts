@@ -11,6 +11,10 @@ export type ApiErrorCode =
   | "HANDLE_INVALID"
   | "USER_NOT_FOUND"
   | "RATE_LIMITED"
+  | "ILLEGAL_TRANSITION"
+  | "SLUG_TAKEN"
+  | "INVALID_SLUG"
+  | "INVALID_PROOF_LIST"
   | "INTERNAL_ERROR";
 
 export interface ApiErrorResponse {

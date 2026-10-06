@@ -17,7 +17,7 @@
 - **M1:** Database foundation (Neon schema, migrations, constraints) [COMPLETED]
 - **M2:** Identity & Proof handle (`@username` availability, claiming, concurrent safety) [COMPLETED]
 - **M3:** Profile system (`/@username` public display, bio, selected proofs, SEO, 301 redirects) [COMPLETED]
-- **M4:** Proof creation & lifecycle state machine
+- **M4:** Proof creation & lifecycle state machine [COMPLETED]
 - **M5 – M6:** R2 direct upload pipeline, quarantine, scanning, and document processing
 - **M7 – M9:** Public proof page (`/@username/slug`), verification architecture, and QR sharing
 - **M10 – M18:** Editor, analytics, SEO, abuse/takedown, performance, security audit, and launch
