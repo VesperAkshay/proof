@@ -17,7 +17,10 @@
     "format:fix": "prettier --write \"**/*.{ts,tsx,js,json,css}\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.0",
@@ -51,6 +54,7 @@
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.15",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.25.0",
     "vitest": "^3.0.7"
