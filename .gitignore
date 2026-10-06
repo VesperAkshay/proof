@@ -11,3 +11,5 @@ coverage/
 *.md
 **/*.md
 !README.md
+
+*.tsbuildinfo
