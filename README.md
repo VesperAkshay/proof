@@ -208,6 +208,9 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 |---|---|
 | `pnpm dev` | Starts the Next.js local development server |
 | `pnpm build` | Compiles an optimized Next.js production build |
+| `pnpm build:worker` | Builds the Cloudflare Worker via `@opennextjs/cloudflare` |
+| `pnpm preview:worker` | Runs local worker preview with Wrangler emulator |
+| `pnpm deploy:worker` | Deploys directly to Cloudflare Workers using Wrangler |
 | `pnpm start` | Runs the compiled production build locally |
 | `pnpm test` | Runs the complete Vitest test suite (393 tests) |
 | `pnpm test:watch` | Starts Vitest in interactive watch mode |
@@ -220,6 +223,23 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 | `pnpm db:rollback` | Executes reverse rollback migration (`CASCADE`) |
 | `pnpm db:seed` | Seeds system issuers, reserved names, and sample proofs |
 | `pnpm db:benchmark` | Runs synthetic load test and query execution plan analysis |
+
+---
+
+## Deployment (Cloudflare Workers / Pages)
+
+Proof is configured for zero-cold-start edge deployment on **Cloudflare** using `@opennextjs/cloudflare`:
+
+### Build Settings in Cloudflare Dashboard
+| Setting | Value |
+|---|---|
+| **Framework preset** | `None` / `Next.js` |
+| **Build command** | `npx @opennextjs/cloudflare build` *(or `pnpm run build:worker`)* |
+| **Build output directory** | `.open-next/assets` |
+| **Node.js Compatibility** | Enabled via `wrangler.jsonc` (`compatibility_flags: ["nodejs_compat"]`) |
+
+### Architecture Note (Why OpenNext)
+Next.js 15 generates internal Webpack compilation cache files (`.next/cache/.../0.pack` ~80 MiB) that exceed Cloudflare Pages' 25 MiB single-file limit. The `@opennextjs/cloudflare` adapter compiles the server application into a Cloudflare Worker (`.open-next/worker.js`) and routes static assets to `.open-next/assets`, bypassing the file size limit while unlocking full edge SSR, Clerk auth, and serverless PostgreSQL connectivity.
 
 ---
 

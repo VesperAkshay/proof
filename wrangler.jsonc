@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "proof",
+  // NOTE (Deployment Architecture - Option B):
+  // Proof runs on Cloudflare Workers via @opennextjs/cloudflare.
+  // The entrypoint .open-next/worker.js is generated during `pnpm run build:worker`.
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2024-12-30",
+  // nodejs_compat is required for Node APIs used by Next.js 15, Clerk, and Neon serverless driver
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  // Assets are served directly from .open-next/assets, which strips Webpack compilation
+  // caches (e.g. 0.pack > 80 MiB) so Cloudflare's 25 MiB asset upload limit is never violated.
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

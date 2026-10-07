@@ -10,6 +10,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:worker": "opennextjs-cloudflare build",
+    "preview:worker": "opennextjs-cloudflare build && wrangler dev",
+    "deploy:worker": "opennextjs-cloudflare build && wrangler deploy",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -44,6 +47,7 @@
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@next/eslint-plugin-next": "^16.3.8",
+    "@opennextjs/cloudflare": "^1.20.8",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.2.0",
     "@types/node": "^22.13.9",
@@ -64,6 +68,7 @@
     "tsx": "^4.23.15",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.25.0",
-    "vitest": "^3.0.7"
+    "vitest": "^3.0.7",
+    "wrangler": "^4.147.0"
   }
 }

@@ -1,3 +1,11 @@
+/**
+ * Cloudflare Deployment Note (Option B):
+ * Proof is deployed to Cloudflare Workers using @opennextjs/cloudflare.
+ * Server routes, dynamic SSR, and database queries execute in a Cloudflare Worker
+ * (.open-next/worker.js) while static assets are served from .open-next/assets.
+ * Build command: `pnpm run build:worker` (opennextjs-cloudflare build).
+ */
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
