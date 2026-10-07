@@ -1,4 +1,14 @@
-import { pgTable, uuid, text, timestamp, check, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  check,
+  index,
+  date,
+  integer,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { users } from "./users";
 import { proofs } from "./proofs";
@@ -28,5 +38,37 @@ export const analyticsEvents = pgTable(
   ]
 );
 
+export const analyticsDaily = pgTable(
+  "analytics_daily",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    date: date("date").notNull(),
+    profileUserId: uuid("profile_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    proofId: uuid("proof_id").references(() => proofs.id, { onDelete: "cascade" }),
+    eventType: text("event_type").notNull(),
+    count: integer("count").notNull().default(0),
+    uniqueVisitors: integer("unique_visitors").notNull().default(0),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    check(
+      "analytics_daily_type_check",
+      sql`${table.eventType} IN ('profile_view', 'proof_view', 'download', 'qr_scan', 'external_link_click')`
+    ),
+    uniqueIndex("analytics_daily_unique_record_idx").on(
+      table.date,
+      table.profileUserId,
+      sql`COALESCE(${table.proofId}, '00000000-0000-0000-0000-000000000000'::uuid)`,
+      table.eventType
+    ),
+    index("analytics_daily_profile_date_idx").on(table.profileUserId, table.date),
+    index("analytics_daily_proof_date_idx").on(table.proofId, table.date),
+  ]
+);
+
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type NewAnalyticsEvent = typeof analyticsEvents.$inferInsert;
+export type AnalyticsDaily = typeof analyticsDaily.$inferSelect;
+export type NewAnalyticsDaily = typeof analyticsDaily.$inferInsert;

@@ -13,6 +13,7 @@ import {
   reports,
   auditLog,
   analyticsEvents,
+  analyticsDaily,
   handleHistory,
 } from "../schema";
 
@@ -37,6 +38,7 @@ describe("Database Constraints & Invariants (M1.3)", () => {
       expect(reports.id.primary).toBe(true);
       expect(auditLog.id.primary).toBe(true);
       expect(analyticsEvents.id.primary).toBe(true);
+      expect(analyticsDaily.id.primary).toBe(true);
     });
   });
 

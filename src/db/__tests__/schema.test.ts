@@ -14,10 +14,11 @@ import {
   reports,
   auditLog,
   analyticsEvents,
+  analyticsDaily,
 } from "../schema";
 
 describe("Database Schema Definitions (M1.1)", () => {
-  it("exports all 14 required relational tables", () => {
+  it("exports all required relational tables including analyticsDaily", () => {
     expect(users).toBeDefined();
     expect(handleHistory).toBeDefined();
     expect(reservedHandles).toBeDefined();
@@ -32,6 +33,7 @@ describe("Database Schema Definitions (M1.1)", () => {
     expect(reports).toBeDefined();
     expect(auditLog).toBeDefined();
     expect(analyticsEvents).toBeDefined();
+    expect(analyticsDaily).toBeDefined();
   });
 
   describe("Username constraint logic", () => {

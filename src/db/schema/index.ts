@@ -4,7 +4,7 @@ import { proofs, proofSlugHistory } from "./proofs";
 import { assets, proofAssets, uploadSessions } from "./assets";
 import { issuers, verificationRecords, verificationEvents } from "./verification";
 import { reports } from "./trust";
-import { analyticsEvents } from "./analytics";
+import { analyticsEvents, analyticsDaily } from "./analytics";
 
 export * from "./users";
 export * from "./proofs";
@@ -126,6 +126,17 @@ export const analyticsEventsRelations = relations(analyticsEvents, ({ one }) => 
   }),
   proof: one(proofs, {
     fields: [analyticsEvents.proofId],
+    references: [proofs.id],
+  }),
+}));
+
+export const analyticsDailyRelations = relations(analyticsDaily, ({ one }) => ({
+  profileUser: one(users, {
+    fields: [analyticsDaily.profileUserId],
+    references: [users.id],
+  }),
+  proof: one(proofs, {
+    fields: [analyticsDaily.proofId],
     references: [proofs.id],
   }),
 }));

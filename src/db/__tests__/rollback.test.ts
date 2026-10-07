@@ -72,4 +72,29 @@ describe("Migration Rollback Verification (M1.5)", () => {
       process.env.DATABASE_URL = originalUrl;
     }
   });
+
+  describe("Migration 0001 Rollback Verification (analytics_daily)", () => {
+    const up0001Path = path.resolve(
+      process.cwd(),
+      "src/db/migrations/0001_lean_calypso.sql"
+    );
+    const down0001Path = path.resolve(
+      process.cwd(),
+      "src/db/migrations/0001_lean_calypso_down.sql"
+    );
+
+    it("ensures 0001 down migration file exists and is readable", () => {
+      expect(fs.existsSync(down0001Path)).toBe(true);
+      const content = fs.readFileSync(down0001Path, "utf-8");
+      expect(content.length).toBeGreaterThan(20);
+    });
+
+    it("verifies analytics_daily created in forward migration has matching DROP with CASCADE in down migration", () => {
+      const upContent = fs.readFileSync(up0001Path, "utf-8");
+      const downContent = fs.readFileSync(down0001Path, "utf-8");
+
+      expect(upContent).toContain('CREATE TABLE "analytics_daily"');
+      expect(downContent).toContain('DROP TABLE IF EXISTS "analytics_daily" CASCADE;');
+    });
+  });
 });
