@@ -21,7 +21,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:rollback": "tsx src/db/rollback.ts",
-    "db:seed": "tsx src/db/seed.ts"
+    "db:seed": "tsx src/db/seed.ts",
+    "db:benchmark": "tsx src/db/benchmark.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1146.0",

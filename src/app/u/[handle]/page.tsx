@@ -12,6 +12,8 @@ interface ProfilePageProps {
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://proof.so";
 
+export const revalidate = 60;
+
 export async function generateMetadata({
   params,
 }: ProfilePageProps): Promise<Metadata> {
