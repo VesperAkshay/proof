@@ -42,7 +42,7 @@ export async function generateMetadata({
     };
   }
 
-  const { proof, user } = result;
+  const { proof, user, primaryAsset } = result;
   const canonicalUrl = `${BASE_URL}/@${user.username}/${proof.slug}`;
   const title = `${proof.title} — ${user.displayName || user.username} on Proof`;
   const description =
@@ -50,6 +50,8 @@ export async function generateMetadata({
     `${proof.title} credential and evidence artifact published by @${user.username} on Proof.`;
 
   const isUnlisted = proof.visibility === "unlisted";
+  const previewImage =
+    primaryAsset?.previewUrl || `${BASE_URL}/@${user.username}/${proof.slug}/qr.png`;
 
   return {
     title,
@@ -63,11 +65,18 @@ export async function generateMetadata({
       url: canonicalUrl,
       siteName: "Proof",
       type: "article",
+      images: [
+        {
+          url: previewImage,
+          alt: `${proof.title} credential artifact`,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      images: [previewImage],
     },
     robots: {
       index: !isUnlisted,
@@ -139,6 +148,7 @@ export default async function ProofPage({ params, searchParams }: ProofPageProps
       name: user.displayName || user.username,
       url: `${BASE_URL}/@${user.username}`,
     },
+    ...(primaryAsset?.previewUrl ? { image: primaryAsset.previewUrl } : {}),
   };
 
   return (

@@ -48,11 +48,13 @@ export async function generateMetadata({
       siteName: "Proof",
       type: "profile",
       username: user.username,
+      ...(user.avatarUrl ? { images: [{ url: user.avatarUrl }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      ...(user.avatarUrl ? { images: [user.avatarUrl] } : {}),
     },
     robots: {
       index: true,
@@ -104,6 +106,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     url: canonicalUrl,
     ...(user.bio ? { description: user.bio } : {}),
     ...(safeLinks.length > 0 ? { sameAs: safeLinks } : {}),
+    ...(user.avatarUrl ? { image: user.avatarUrl } : {}),
   };
 
   return (
