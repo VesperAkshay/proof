@@ -2,8 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { getProfileByAuthUserId } from "@/services/identity";
 import { listProofsForUser } from "@/services/proof";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { DashboardClient } from "./DashboardClient";
+import { ClaimHandleForm } from "./ClaimHandleForm";
 
 export const metadata = {
   title: "Publishing Desk — Proof",
@@ -14,7 +14,11 @@ export const metadata = {
   },
 };
 
-export default async function DashboardPage() {
+interface DashboardPageProps {
+  searchParams?: Promise<{ claim?: string }>;
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const { userId: authUserId } = await auth();
   if (!authUserId) {
     redirect("/");
@@ -22,19 +26,10 @@ export default async function DashboardPage() {
 
   const profile = await getProfileByAuthUserId(authUserId);
   if (!profile) {
-    // User needs to claim a handle first
+    const params = searchParams ? await searchParams : {};
     return (
-      <main className="min-h-screen bg-paper text-ink p-8 flex flex-col items-center justify-center">
-        <h1 className="font-display text-3xl font-bold mb-4 uppercase">Claim Your Handle</h1>
-        <p className="font-body text-base text-ink/70 mb-6 max-w-md text-center">
-          You need to claim a unique handle before publishing credentials or evidence on Proof.
-        </p>
-        <Link
-          href="/"
-          className="font-mono text-sm uppercase px-4 py-2 border border-ink bg-cobalt text-paper hover:bg-cobalt/90 transition-colors"
-        >
-          Claim Handle on Homepage &rarr;
-        </Link>
+      <main className="min-h-screen bg-bg text-fg px-6 py-12 md:py-24 flex flex-col items-center justify-center">
+        <ClaimHandleForm initialUsername={params?.claim || ""} />
       </main>
     );
   }

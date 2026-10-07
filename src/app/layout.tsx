@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Bricolage_Grotesque, Instrument_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -32,11 +33,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${fontDisplay.variable} ${fontBody.variable} ${fontMono.variable}`}
-    >
-      <body className="min-h-screen bg-bg text-fg font-body antialiased">{children}</body>
-    </html>
+    <ClerkProvider>
+      <html
+        lang="en"
+        className={`${fontDisplay.variable} ${fontBody.variable} ${fontMono.variable}`}
+      >
+        <body className="min-h-screen bg-bg text-fg font-body antialiased">{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }

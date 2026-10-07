@@ -81,6 +81,13 @@ export function ProofEditor({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  // Evidence upload state
+  const [currentAsset, setCurrentAsset] = useState(previewAsset || null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Snapshot ref of last committed/successful state for rollback on API failure
   const committedSnapshotRef = useRef<{
     proof: ProofResponseDTO;
@@ -267,6 +274,98 @@ export function ProofEditor({
         rollback(`Failed to ${action} proof. Reverted to previous state.`);
       }
     });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+    setUploadProgress("Initializing upload session...");
+
+    try {
+      // 1. Initialize upload session
+      const initRes = await fetch("/api/uploads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          size: file.size,
+          mime: file.type || "application/octet-stream",
+        }),
+      });
+
+      const initJson = await initRes.json();
+      if (!initRes.ok) {
+        throw new Error(initJson.error?.message || "Failed to initialize upload.");
+      }
+
+      const session = initJson.session || initJson.data?.session || initJson;
+      const { upload, sessionId, assetId } = session;
+
+      setUploadProgress("Uploading file to secure storage...");
+
+      // 2. Put file to presigned URL
+      if (upload?.type === "single" && upload.url) {
+        const putRes = await fetch(upload.url, {
+          method: "PUT",
+          headers: { "Content-Type": file.type || "application/octet-stream" },
+          body: file,
+        });
+        if (!putRes.ok) {
+          throw new Error("Failed to upload file bytes to storage.");
+        }
+      }
+
+      setUploadProgress("Scanning for viruses and verifying checksum...");
+
+      // 3. Complete session
+      const completeRes = await fetch(`/api/uploads/${sessionId}/complete`, {
+        method: "POST",
+      });
+
+      const completeJson = await completeRes.json();
+      if (!completeRes.ok) {
+        throw new Error(completeJson.error?.message || "File validation failed.");
+      }
+
+      setUploadProgress("Attaching evidence to proof record...");
+
+      // 4. Attach asset to proof
+      const attachRes = await fetch(`/api/proofs/${currentProof.id}/assets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assetId, role: "evidence" }),
+      });
+
+      if (!attachRes.ok) {
+        const attachJson = await attachRes.json().catch(() => ({}));
+        throw new Error(attachJson.error?.message || "Failed to link asset to proof.");
+      }
+
+      // 5. Update local asset state
+      const newAsset = {
+        filename: file.name,
+        mimeType: file.type || "application/octet-stream",
+        sizeBytes: file.size,
+        previewUrl: `/api/assets/${assetId}/preview`,
+        downloadUrl: `/@${username}/${currentProof.slug}/download`,
+      };
+      setCurrentAsset(newAsset);
+      setSuccessMessage("Evidence document successfully attached and verified.");
+
+      setCurrentProof((prev) => ({
+        ...prev,
+        verificationStatus: "DOCUMENT_UPLOADED",
+        effectiveStatus: "DOCUMENT_UPLOADED",
+      }));
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(null);
+    }
   };
 
   return (
@@ -617,6 +716,117 @@ export function ProofEditor({
                 </div>
               </div>
             </div>
+
+            <Rule />
+
+            {/* Section 03: Evidence Artifact Upload */}
+            <div>
+              <h2 className="font-mono text-xs uppercase tracking-mono font-bold text-ink mb-4 pb-2 border-b border-rule flex items-center justify-between">
+                <span>03. EVIDENCE ARTIFACT / DOCUMENT</span>
+                {currentAsset && (
+                  <span className="text-forest text-[11px] font-normal">
+                    &bull; ATTACHED &amp; VERIFIED
+                  </span>
+                )}
+              </h2>
+
+              <div className="space-y-4">
+                {currentAsset ? (
+                  <div className="p-4 border border-rule-soft bg-paper rounded-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 border border-rule bg-warm-gray/20 rounded-sm flex items-center justify-center font-mono text-xs uppercase font-bold text-ink">
+                        {currentAsset.mimeType?.includes("pdf") ? "PDF" : "IMG"}
+                      </div>
+                      <div>
+                        <div className="font-mono text-sm font-semibold text-ink truncate max-w-xs">
+                          {currentAsset.filename}
+                        </div>
+                        <div className="font-mono text-xs text-ink/60">
+                          {(currentAsset.sizeBytes / (1024 * 1024)).toFixed(2)} MB &bull; SHA-256 Verified
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        accept=".pdf,.png,.jpg,.jpeg,.webp"
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={isUploading}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        Replace
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-rule-soft hover:border-rule rounded-sm p-6 text-center bg-paper transition-colors">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      accept=".pdf,.png,.jpg,.jpeg,.webp"
+                      className="hidden"
+                      id="evidence-file-input"
+                    />
+                    <label
+                      htmlFor="evidence-file-input"
+                      className="cursor-pointer flex flex-col items-center justify-center gap-2"
+                    >
+                      <svg
+                        className="w-8 h-8 text-ink/40"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                      <span className="font-mono text-xs uppercase tracking-wider text-ink font-semibold">
+                        Attach Evidence Document
+                      </span>
+                      <span className="font-mono text-[11px] text-ink/60">
+                        PDF, PNG, JPG, WebP up to 10 MB (Stored in Cloudflare R2)
+                      </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="primary"
+                        disabled={isUploading}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="mt-2"
+                      >
+                        Select Document
+                      </Button>
+                    </label>
+                  </div>
+                )}
+
+                {/* Progress / Status display */}
+                {isUploading && uploadProgress && (
+                  <div className="p-3 bg-cobalt/10 border border-cobalt text-cobalt font-mono text-xs rounded-sm flex items-center gap-2 animate-pulse">
+                    <span>&bull;</span> {uploadProgress}
+                  </div>
+                )}
+
+                {uploadError && (
+                  <div className="p-3 bg-danger/10 border border-danger text-danger font-mono text-xs rounded-sm">
+                    &times; {uploadError}
+                  </div>
+                )}
+              </div>
+            </div>
           </form>
         )}
 
@@ -634,7 +844,7 @@ export function ProofEditor({
               displayName={displayName}
               avatarUrl={avatarUrl}
               accent={accent}
-              previewAsset={previewAsset}
+              previewAsset={currentAsset}
             />
           </div>
         )}

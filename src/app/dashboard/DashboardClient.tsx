@@ -15,6 +15,7 @@ import {
 } from "@/components/ui";
 import { ProofReorderList, ProofEditor } from "@/components/editor";
 import type { DashboardAnalyticsResult } from "@/services/analytics";
+import { UserButton } from "@clerk/nextjs";
 
 interface DashboardUser {
   id: string;
@@ -102,8 +103,8 @@ export function DashboardClient({ user, initialProofs }: DashboardClientProps) {
       throw new Error(errData.error?.message || "Failed to update proof");
     }
 
-    const { data } = await res.json();
-    const updatedProof: ProofResponseDTO = data.proof;
+    const json = await res.json();
+    const updatedProof: ProofResponseDTO = json.proof || json.data?.proof;
 
     setProofs((prev) =>
       prev.map((p) => (p.id === id ? updatedProof : p))
@@ -128,8 +129,8 @@ export function DashboardClient({ user, initialProofs }: DashboardClientProps) {
       );
     }
 
-    const { data } = await res.json();
-    const updatedProof: ProofResponseDTO = data.proof;
+    const json = await res.json();
+    const updatedProof: ProofResponseDTO = json.proof || json.data?.proof;
 
     setProofs((prev) =>
       prev.map((p) => (p.id === id ? updatedProof : p))
@@ -161,8 +162,8 @@ export function DashboardClient({ user, initialProofs }: DashboardClientProps) {
         throw new Error(errData.error?.message || "Failed to create proof");
       }
 
-      const { data } = await res.json();
-      const newProof: ProofResponseDTO = data.proof;
+      const json = await res.json();
+      const newProof: ProofResponseDTO = json.proof || json.data?.proof;
 
       setProofs((prev) => [newProof, ...prev]);
       setSelectedProofId(newProof.id);
@@ -198,9 +199,18 @@ export function DashboardClient({ user, initialProofs }: DashboardClientProps) {
                   @{user.username}
                 </span>
               </div>
-              <span className="font-mono text-xs uppercase tracking-mono text-cobalt font-semibold">
-                PUBLISHING DESK
-              </span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="font-mono text-xs uppercase tracking-mono text-cobalt font-semibold">
+                  PUBLISHING DESK
+                </span>
+                <span className="text-ink/30 text-xs">&bull;</span>
+                <Link
+                  href="/?manifest=1"
+                  className="font-mono text-[11px] uppercase tracking-mono text-ink/60 hover:text-ink underline"
+                >
+                  System Manifest
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -254,6 +264,10 @@ export function DashboardClient({ user, initialProofs }: DashboardClientProps) {
                 {isCreating ? "CANCEL" : "NEW PROOF +"}
               </Button>
             )}
+
+            <div className="pl-2 border-l border-rule flex items-center">
+              <UserButton afterSignOutUrl="/" />
+            </div>
           </div>
         </header>
 
