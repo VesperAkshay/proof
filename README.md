@@ -22,5 +22,5 @@
 - **M6:** Document processing & thumbnail generation [COMPLETED]
 - **M7:** Public proof page (`/@username/slug`, SSR, document viewer, download, print-friendly) [COMPLETED]
 - **M8:** Verification architecture (issuers, records, revocation, append-only audit trail) [COMPLETED]
-- **M9:** QR & sharing (canonical SVG/PNG QR, ref=qr analytics tracking) [COMPLETED]
-- **M10 – M18:** Editor, analytics dashboard, SEO, abuse/takedown, performance, security audit, and launch
+- **M10:** Profile/Proof editor (publishing desk, live preview parity, accessible reorder, optimistic updates) [COMPLETED]
+- **M11 – M18:** Analytics, SEO/discovery, abuse/takedown, performance, security audit, and launch
