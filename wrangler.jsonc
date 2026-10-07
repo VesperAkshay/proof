@@ -5,7 +5,7 @@
   // Proof runs on Cloudflare Workers via @opennextjs/cloudflare.
   // The entrypoint .open-next/worker.js is generated during `pnpm run build:worker`.
   "main": ".open-next/worker.js",
-  "compatibility_date": "2024-12-30",
+  "compatibility_date": "2025-04-01",
   // nodejs_compat is required for Node APIs used by Next.js 15, Clerk, and Neon serverless driver
   "compatibility_flags": [
     "nodejs_compat"
