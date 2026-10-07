@@ -31,4 +31,4 @@
 - **M15:** Security audit (threat checklist review, anti-IDOR, magic byte validation, PDF structure sandbox, homograph rejection, strict anti-mass-assignment, global CSP/HSTS/X-Frame-Options headers, zero open High/Critical) [COMPLETED]
 - **M16:** Production readiness (liveness /healthz, readiness /readyz, fail-fast boot validation, 7 operational runbooks, DB restore & rollback drills evidenced) [COMPLETED]
 - **M17:** Load test (synthetic traffic: 10k concurrent visitors, 1k concurrent username checks, 500 uploads/min, 10k views/min, budgets met) [COMPLETED]
-- **M18:** Launch candidate
+- **M18:** Launch candidate (full E2E lifecycle validated: signup → claim @username → create profile → create proof → upload PDF → scan → process → publish → open public URL → download → QR scan → analytics, all exit gates re-verified, launch signoff complete) [COMPLETED]
