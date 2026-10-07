@@ -25,6 +25,20 @@ export async function POST(req: NextRequest) {
       return apiError("NOT_FOUND", "Profile not found. You must claim a handle first.", 404);
     }
 
+    if (user.status === "suspended") {
+      return apiError("FORBIDDEN", "Account is suspended.", 403);
+    }
+
+    const { rateLimiter, RATE_LIMIT_CONFIGS, rateLimitResponse } = await import("@/lib/ratelimit");
+    const uploadLimit = rateLimiter.check(
+      `upload:${user.id}`,
+      RATE_LIMIT_CONFIGS.UPLOAD_SESSION.limit,
+      RATE_LIMIT_CONFIGS.UPLOAD_SESSION.windowSeconds
+    );
+    if (!uploadLimit.allowed) {
+      return rateLimitResponse(uploadLimit, "Upload session rate limit exceeded (20 per hour).");
+    }
+
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") {
       return apiError("VALIDATION_ERROR", "Invalid request body.", 400);

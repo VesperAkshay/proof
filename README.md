@@ -24,5 +24,7 @@
 - **M8:** Verification architecture (issuers, records, revocation, append-only audit trail) [COMPLETED]
 - **M9:** QR & sharing (canonical SVG/PNG QR, ref=qr analytics tracking) [COMPLETED]
 - **M10:** Profile/Proof editor (publishing desk, live preview parity, accessible reorder, optimistic updates) [COMPLETED]
+- **M11:** Analytics (privacy-first, rotating salted visitor hash, coarse geo, daily aggregation, raw TTL, aggregate dashboard) [COMPLETED]
 - **M12:** SEO / discovery (title, description, canonical @ URLs, OpenGraph, Twitter cards, Schema.org Person & EducationalOccupationalCredential JSON-LD, sitemap.xml, robots.txt, noindex for private/unlisted) [COMPLETED]
-- **M13 – M18:** Abuse/takedown, performance, security audit, and launch
+- **M13:** Abuse & trust (reporting proof/profile, abuse queue, takedown, suspension, spam heuristics, rate limiting, upload limits, suspicious activity detection, audit trail) [COMPLETED]
+- **M14 – M18:** Performance engineering, security audit, production readiness, and launch

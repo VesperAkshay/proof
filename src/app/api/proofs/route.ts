@@ -37,6 +37,20 @@ export async function POST(req: NextRequest) {
       return apiError("NOT_FOUND", "Profile not found. You must claim a handle first.", 404);
     }
 
+    if (user.status === "suspended") {
+      return apiError("FORBIDDEN", "Account is suspended.", 403);
+    }
+
+    const { rateLimiter, RATE_LIMIT_CONFIGS, rateLimitResponse } = await import("@/lib/ratelimit");
+    const writeLimit = rateLimiter.check(
+      `write:${user.id}`,
+      RATE_LIMIT_CONFIGS.WRITE.limit,
+      RATE_LIMIT_CONFIGS.WRITE.windowSeconds
+    );
+    if (!writeLimit.allowed) {
+      return rateLimitResponse(writeLimit, "Write rate limit exceeded (60 per minute).");
+    }
+
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") {
       return apiError("VALIDATION_ERROR", "Invalid request body.", 400);

@@ -20,6 +20,7 @@ export class IdentityError extends Error {
       | "HANDLE_RESERVED"
       | "HANDLE_INVALID"
       | "USER_NOT_FOUND"
+      | "FORBIDDEN"
       | "INTERNAL_ERROR",
     message: string,
     public statusCode: number = 400
@@ -203,6 +204,10 @@ export async function claimHandle({
       }
 
       if (existingSelf) {
+        if (existingSelf.status === "suspended") {
+          throw new IdentityError("FORBIDDEN", "Account is suspended.", 403);
+        }
+
         // If user already owns this handle, idempotent return
         if (existingSelf.usernameNormalized === normalized) {
           return existingSelf;
@@ -297,6 +302,20 @@ export async function updateProfile(
   authUserId: string,
   data: { displayName?: string; bio?: string }
 ): Promise<User> {
+  const [existingUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.authUserId, authUserId))
+    .limit(1);
+
+  if (!existingUser) {
+    throw new IdentityError("USER_NOT_FOUND", "Profile not found.", 404);
+  }
+
+  if (existingUser.status === "suspended") {
+    throw new IdentityError("FORBIDDEN", "Account is suspended.", 403);
+  }
+
   const [updatedUser] = await db
     .update(users)
     .set({
