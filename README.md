@@ -29,4 +29,5 @@
 - **M13:** Abuse & trust (reporting proof/profile, abuse queue, takedown, suspension, spam heuristics, rate limiting, upload limits, suspicious activity detection, audit trail) [COMPLETED]
 - **M14:** Performance engineering (latency budgets, 100 concurrent requests p95 < 150ms, 1k-100k users & 1M-10M proofs scale tier models, query plans, CDN ISR revalidate = 60 cache tuning) [COMPLETED]
 - **M15:** Security audit (threat checklist review, anti-IDOR, magic byte validation, PDF structure sandbox, homograph rejection, strict anti-mass-assignment, global CSP/HSTS/X-Frame-Options headers, zero open High/Critical) [COMPLETED]
-- **M16 – M18:** Production readiness, load test, and launch
+- **M16:** Production readiness (liveness /healthz, readiness /readyz, fail-fast boot validation, 7 operational runbooks, DB restore & rollback drills evidenced) [COMPLETED]
+- **M17 – M18:** Load test and launch candidate
